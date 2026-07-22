@@ -1,0 +1,99 @@
+---
+import type { GetStaticPaths } from "astro";
+import DoiDetail from "../../layouts/DoiDetail.astro";
+import CitationView from "../../components/views/CitationView.astro";
+import PersonView from "../../components/views/PersonView.astro";
+import CountryView from "../../components/views/CountryView.astro";
+import EntityView from "../../components/views/EntityView.astro";
+import TombstoneBanner from "../../components/views/TombstoneBanner.astro";
+import ExternalRedirectView from "../../components/views/ExternalRedirectView.astro";
+import UnresolvedView from "../../components/views/UnresolvedView.astro";
+import ErrorState from "../../components/ErrorState.astro";
+import { fetchDOI, fetchCitation } from "../../lib/api";
+import { ApiError, GoneError, NotFoundError } from "../../lib/errors";
+import type { PublicDOIResponse } from "../../lib/types";
+
+const suffix = Astro.params.suffix;
+if (!suffix) {
+  return Astro.redirect("/404");
+}
+
+const doi = `10.ronzz/${suffix}`;
+
+let record: PublicDOIResponse | null = null;
+let citations: Array<{ style: string; citation: string }> = [];
+let error: { status: number; title: string; message: string } | null = null;
+let isTombstone = false;
+
+try {
+  record = await fetchDOI(doi);
+
+  // Fetch citations for citation-type records
+  if (record.target_url || !["person", "country", "abstract_entity"].includes(record.doi_type)) {
+    const styles = ["apa", "vancouver", "mla", "chicago"] as const;
+    const results = await Promise.allSettled(
+      styles.map((style) => fetchCitation(doi, style)),
+    );
+    citations = results
+      .filter((r) => r.status === "fulfilled")
+      .map((r) => r.value)
+      .map((r) => ({ style: r.style, citation: r.citation }));
+  }
+} catch (e: unknown) {
+  if (e instanceof GoneError) {
+    isTombstone = true;
+    // Still try to get the record metadata if available
+    try {
+      record = await fetchDOI(doi);
+    } catch {
+      // Record gone and no metadata — still show tombstone
+    }
+  } else if (e instanceof NotFoundError) {
+    error = { status: 404, title: "Not Found", message: `DOI ${doi} was not found.` };
+  } else if (e instanceof ApiError) {
+    error = { status: e.status, title: "Error", message: e.message };
+  } else {
+    error = { status: 500, title: "Unexpected Error", message: "An unexpected error occurred." };
+  }
+}
+---
+
+{error ? (
+  <DoiDetail record={{ doi, title: "", target_url: null, doi_type: "", metadata: {}, created_at: "", snippet: null } as PublicDOIResponse}>
+    <ErrorState {...error} />
+  </DoiDetail>
+) : record ? (
+  <DoiDetail record={record}>
+    {isTombstone ? (
+      <TombstoneBanner record={record} />
+    ) : record.doi_type === "person" ? (
+      <PersonView record={record} />
+    ) : record.doi_type === "country" ? (
+      <CountryView record={record} />
+    ) : record.doi_type === "abstract_entity" ? (
+      <EntityView record={record} />
+    ) : record.doi_type === "external" && record.target_url ? (
+      <ExternalRedirectView record={record} />
+    ) : record.target_url ? (
+      <CitationView record={record} {citations} />
+    ) : (
+      <UnresolvedView record={record} />
+    )}
+
+    <section class="mt-10 border-t border-gray-200 pt-6">
+      <h2 class="mb-3 text-lg font-semibold text-gray-800">Related DOIs</h2>
+      <p class="text-sm text-gray-500">
+        <a
+          href={`/search?q=${encodeURIComponent(doi)}&mode=semantic`}
+          class="text-blue-600 hover:underline"
+        >
+          Find semantically related DOIs &rarr;
+        </a>
+      </p>
+    </section>
+  </DoiDetail>
+) : (
+  <DoiDetail record={{ doi, title: "", target_url: null, doi_type: "", metadata: {}, created_at: "", snippet: null } as PublicDOIResponse}>
+    <ErrorState status={410} title="Deleted" message={`DOI ${doi} has been deleted.`} />
+  </DoiDetail>
+)}

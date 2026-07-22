@@ -1,0 +1,16 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Rate Limited">
+  <div class="flex flex-col items-center justify-center py-20 text-center">
+    <p class="text-6xl font-bold text-gray-300">429</p>
+    <h1 class="mt-4 text-2xl font-semibold text-gray-800">Too Many Requests</h1>
+    <p class="mt-2 max-w-md text-gray-500">
+      You have exceeded the rate limit. Please wait a moment before making another request.
+    </p>
+    <a href="/" class="mt-6 rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700">
+      Back to Home
+    </a>
+  </div>
+</Base>

@@ -1,0 +1,100 @@
+---
+import Base from "../layouts/Base.astro";
+import SearchBarIsland from "../components/SearchBarIsland.svelte";
+import SearchResultCard from "../components/SearchResultCard.astro";
+import SearchPagination from "../components/SearchPagination.astro";
+import ErrorState from "../components/ErrorState.astro";
+import { searchDOIs } from "../lib/api";
+import { ApiError } from "../lib/errors";
+
+const LIMIT = 20;
+
+const q = Astro.url.searchParams.get("q") ?? "";
+const doi_type = Astro.url.searchParams.get("doi_type") ?? "";
+const mode = Astro.url.searchParams.get("mode") ?? "fts";
+const pageStr = Astro.url.searchParams.get("page") ?? "1";
+const page = Math.max(1, parseInt(pageStr, 10) || 1);
+const offset = (page - 1) * LIMIT;
+
+// Build the base query string for pagination links
+const baseParams = new URLSearchParams();
+if (q) baseParams.set("q", q);
+if (doi_type) baseParams.set("doi_type", doi_type);
+if (mode !== "fts") baseParams.set("mode", mode);
+
+let items: Awaited<ReturnType<typeof searchDOIs>>["items"] = [];
+let total = 0;
+let error: { status: number; title: string; message: string } | null = null;
+
+// Only call the API when there is a search query
+if (q) {
+  try {
+    const result = await searchDOIs(q, { doi_type, mode: mode as "fts" | "semantic", limit: LIMIT, offset });
+    items = result.items;
+    total = result.total;
+  } catch (e: unknown) {
+    if (e instanceof ApiError) {
+      error = {
+        status: e.status,
+        title: e.status === 429 ? "Rate Limited" : "Search Error",
+        message: e.message,
+      };
+    } else {
+      error = {
+        status: 500,
+        title: "Unexpected Error",
+        message: "An unexpected error occurred. Please try again later.",
+      };
+    }
+  }
+}
+
+const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+---
+
+<Base title={q ? `Search: ${q}` : "Search"}>
+  <div class="mb-8">
+    <SearchBarIsland client:load {q} doi_type={doi_type} {mode} />
+  </div>
+
+  {error ? (
+    <ErrorState {...error} />
+  ) : (
+    <>
+      {!q ? (
+        <div class="py-12 text-center">
+          <h2 class="text-xl font-semibold text-gray-700">Enter a search term</h2>
+          <p class="mt-2 text-gray-500">Use the search bar above to find DOI records.</p>
+        </div>
+      ) : items.length === 0 ? (
+        <div class="py-12 text-center">
+          <h2 class="text-xl font-semibold text-gray-700">No results found</h2>
+          <p class="mt-2 text-gray-500">
+            No records match <strong>&ldquo;{q}&rdquo;</strong>.
+            Try different keywords or switch to fuzzy match mode.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p class="mb-4 text-sm text-gray-500">
+            Showing page {page} of {totalPages} ({total} results for &ldquo;{q}&rdquo;)
+          </p>
+
+          <div class="space-y-3">
+            {items.map((item) => (
+              <SearchResultCard item={item} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <SearchPagination
+              currentPage={page}
+              totalPages={totalPages}
+              baseQuery={baseParams.toString()}
+            />
+          )}
+        </>
+      )}
+    </>
+  )}
+</Base>

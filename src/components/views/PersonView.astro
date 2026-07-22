@@ -1,0 +1,22 @@
+---
+import type { PublicDOIResponse } from "../../lib/types";
+import MetadataTable from "../MetadataTable.astro";
+
+export interface Props {
+  record: PublicDOIResponse;
+}
+
+const meta = record.metadata as Record<string, string | undefined>;
+const firstName = meta.first_name ?? "";
+const lastName = meta.last_name ?? "";
+const fullName = [firstName, lastName].filter(Boolean).join(" ") || record.title || record.doi;
+---
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">{fullName}</h1>
+
+  <section>
+    <h2 class="mb-3 text-lg font-semibold text-gray-800">Details</h2>
+    <MetadataTable metadata={record.metadata} />
+  </section>
+</div>

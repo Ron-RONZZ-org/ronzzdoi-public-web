@@ -1,0 +1,25 @@
+---
+export interface Props {
+  citations: Array<{ style: string; citation: string }>;
+}
+---
+
+{citations.length > 0 && (
+  <div class="space-y-4">
+    {citations.map(({ style, citation }) => (
+      <div class="rounded-lg border border-gray-200 p-4">
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-sm font-semibold uppercase text-gray-500">{style}</span>
+          <button
+            data-copy={citation}
+            class="rounded bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
+            onclick="navigator.clipboard.writeText(this.getAttribute('data-copy')).then(() => { this.textContent = 'Copied!'; setTimeout(() => { this.textContent = 'Copy'; }, 2000); })"
+          >
+            Copy
+          </button>
+        </div>
+        <p class="text-sm leading-relaxed text-gray-800">{citation}</p>
+      </div>
+    ))}
+  </div>
+)}

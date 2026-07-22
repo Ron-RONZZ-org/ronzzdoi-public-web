@@ -1,0 +1,66 @@
+---
+export interface Props {
+  q?: string;
+  doi_type?: string;
+  mode?: string;
+}
+
+const { q = "", doi_type = "", mode = "fts" } = Astro.props;
+---
+
+<form method="get" action="/search" class="space-y-3">
+  <div class="flex gap-2">
+    <input
+      type="text"
+      name="q"
+      value={q}
+      placeholder="Search DOIs…"
+      aria-label="Search query"
+      class="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+    />
+    <button
+      type="submit"
+      class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      Search
+    </button>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-4 text-sm">
+    <label class="flex items-center gap-1">
+      <span class="text-gray-600">Type:</span>
+      <select
+        name="doi_type"
+        class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+      >
+        <option value="" selected={doi_type === ""}>All types</option>
+        <option value="person" selected={doi_type === "person"}>Person</option>
+        <option value="country" selected={doi_type === "country"}>Country</option>
+        <option value="abstract_entity" selected={doi_type === "abstract_entity"}>Organization</option>
+        <option value="book" selected={doi_type === "book"}>Book</option>
+        <option value="bookSection" selected={doi_type === "bookSection"}>Book Section</option>
+        <option value="scientificPaper" selected={doi_type === "scientificPaper"}>Scientific Paper</option>
+        <option value="conferencePaper" selected={doi_type === "conferencePaper"}>Conference Paper</option>
+        <option value="presentation" selected={doi_type === "presentation"}>Presentation</option>
+        <option value="report" selected={doi_type === "report"}>Report</option>
+        <option value="dataset" selected={doi_type === "dataset"}>Dataset</option>
+        <option value="webpage" selected={doi_type === "webpage"}>Webpage</option>
+        <option value="magazineArticle" selected={doi_type === "magazineArticle"}>Magazine Article</option>
+        <option value="newspaperArticle" selected={doi_type === "newspaperArticle"}>Newspaper Article</option>
+        <option value="film" selected={doi_type === "film"}>Film</option>
+        <option value="podcast" selected={doi_type === "podcast"}>Podcast</option>
+        <option value="song" selected={doi_type === "song"}>Song</option>
+        <option value="media" selected={doi_type === "media"}>Media</option>
+        <option value="circulaire" selected={doi_type === "circulaire"}>Circulaire</option>
+        <option value="rulebook" selected={doi_type === "rulebook"}>Rulebook</option>
+        <option value="document" selected={doi_type === "document"}>Document</option>
+      </select>
+    </label>
+
+    <label class="flex items-center gap-1">
+      <input type="hidden" name="mode" value={mode} />
+      <span class="text-gray-600">Mode:</span>
+      <span class="font-medium">{mode === "semantic" ? "Fuzzy match" : "Exact words"}</span>
+    </label>
+  </div>
+</form>

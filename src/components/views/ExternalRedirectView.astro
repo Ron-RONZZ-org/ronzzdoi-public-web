@@ -1,0 +1,34 @@
+---
+import type { PublicDOIResponse } from "../../lib/types";
+import MetadataTable from "../MetadataTable.astro";
+
+export interface Props {
+  record: PublicDOIResponse;
+}
+---
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">{record.title || record.doi}</h1>
+
+  {record.target_url && (
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <p class="text-sm text-gray-600">This DOI redirects to:</p>
+      <a
+        href={record.target_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-1 inline-flex items-center gap-2 break-all text-blue-600 hover:underline"
+      >
+        {record.target_url}
+        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+    </div>
+  )}
+
+  <section>
+    <h2 class="mb-3 text-lg font-semibold text-gray-800">Metadata</h2>
+    <MetadataTable metadata={record.metadata} />
+  </section>
+</div>

@@ -1,0 +1,31 @@
+---
+import Base from "../layouts/Base.astro";
+import SearchBarIsland from "../components/SearchBarIsland.svelte";
+---
+
+<Base title="Home">
+  <div class="flex flex-col items-center justify-center py-16 text-center">
+    <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
+      ronzzdoi
+    </h1>
+    <p class="mt-3 max-w-xl text-lg text-gray-600">
+      Persistent DOI and citation records — search, browse, and cite books, papers, datasets,
+      people, and more.
+    </p>
+
+    <div class="mt-10 w-full max-w-xl">
+      <SearchBarIsland
+        client:load
+        q=""
+        doi_type=""
+        mode="fts"
+      />
+    </div>
+
+    <div class="mt-12 text-sm text-gray-500">
+      <p>
+        <a href="/search?q=" class="underline hover:text-gray-700">Browse all records</a>
+      </p>
+    </div>
+  </div>
+</Base>

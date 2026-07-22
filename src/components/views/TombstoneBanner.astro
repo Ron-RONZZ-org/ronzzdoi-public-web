@@ -1,0 +1,23 @@
+---
+import type { PublicDOIResponse } from "../../lib/types";
+
+export interface Props {
+  record: PublicDOIResponse;
+}
+---
+
+<div class="rounded-lg border border-orange-200 bg-orange-50 p-6">
+  <div class="flex items-start gap-3">
+    <span class="text-2xl">⚠️</span>
+    <div>
+      <h2 class="text-lg font-semibold text-orange-800">This DOI has been deleted</h2>
+      <p class="mt-1 text-sm text-orange-700">
+        The record <strong>{record.doi}</strong> is no longer available. This identifier is permanently
+        reserved and will not be reassigned.
+      </p>
+      <p class="mt-1 text-sm text-orange-600">
+        Title: {record.title || "(no title)"}
+      </p>
+    </div>
+  </div>
+</div>

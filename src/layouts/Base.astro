@@ -1,0 +1,43 @@
+---
+import "../styles/global.css";
+
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const siteTitle = `${title} — ronzzdoi`;
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{siteTitle}</title>
+    <meta name="description" content={description ?? "Persistent DOI and citation records at ronzz.org"} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="flex min-h-full flex-col bg-white text-gray-900 antialiased">
+    <nav class="border-b border-gray-200 bg-white">
+      <div class="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
+        <a href="/" class="text-lg font-bold tracking-tight text-gray-900 hover:text-blue-600">
+          ronzzdoi
+        </a>
+        <span class="text-sm text-gray-500">Persistent Citation System</span>
+      </div>
+    </nav>
+
+    <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+      <slot />
+    </main>
+
+    <footer class="border-t border-gray-200 bg-gray-50">
+      <div class="mx-auto max-w-5xl px-4 py-6 text-center text-sm text-gray-500">
+        ronzzdoi — <a href="https://ronzz.org" class="underline hover:text-gray-700">ronzz.org</a>
+      </div>
+    </footer>
+  </body>
+</html>
+

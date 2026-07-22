@@ -1,0 +1,25 @@
+---
+import Base from "./Base.astro";
+import type { PublicDOIResponse } from "../lib/types";
+
+export interface Props {
+  record: PublicDOIResponse;
+}
+
+const { record } = Astro.props;
+const doiSuffix = record.doi.replace(/^10\.ronzz\//, "");
+---
+
+<Base title={record.title || record.doi}>
+  <nav class="mb-4 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="/" class="hover:text-blue-600">Home</a>
+    <span class="mx-2">/</span>
+    <a href={`/search?q=${encodeURIComponent(doiSuffix)}`} class="hover:text-blue-600">Search</a>
+    <span class="mx-2">/</span>
+    <span class="text-gray-700">{record.doi}</span>
+  </nav>
+
+  <article>
+    <slot />
+  </article>
+</Base>

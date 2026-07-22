@@ -1,0 +1,21 @@
+---
+export interface Props {
+  status?: number;
+  title: string;
+  message: string;
+}
+
+const { status, title, message } = Astro.props;
+---
+
+<div class="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+  {status && <p class="text-4xl font-bold text-red-400">{status}</p>}
+  <h2 class="mt-2 text-xl font-semibold text-red-800">{title}</h2>
+  <p class="mt-2 text-red-600">{message}</p>
+  <a
+    href="/"
+    class="mt-4 inline-block rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+  >
+    Back to Home
+  </a>
+</div>

@@ -1,0 +1,23 @@
+---
+import type { PublicDOIResponse } from "../../lib/types";
+import MetadataTable from "../MetadataTable.astro";
+
+export interface Props {
+  record: PublicDOIResponse;
+}
+---
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">{record.title || record.doi}</h1>
+
+  <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+    <p class="text-sm text-yellow-800">
+      This DOI cannot be resolved to a target URL. The metadata is displayed below.
+    </p>
+  </div>
+
+  <section>
+    <h2 class="mb-3 text-lg font-semibold text-gray-800">Metadata</h2>
+    <MetadataTable metadata={record.metadata} />
+  </section>
+</div>

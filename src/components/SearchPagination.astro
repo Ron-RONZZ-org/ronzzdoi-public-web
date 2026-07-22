@@ -1,0 +1,48 @@
+---
+export interface Props {
+  currentPage: number;
+  totalPages: number;
+  baseQuery: string;
+}
+
+const { currentPage, totalPages, baseQuery } = Astro.props;
+const connector = baseQuery ? "&" : "";
+---
+
+<nav class="mt-8 flex items-center justify-center gap-2" aria-label="Search results pages">
+  {currentPage > 1 && (
+    <a
+      href={`/search?${baseQuery}${connector}page=${currentPage - 1}`}
+      class="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      ← Previous
+    </a>
+  )}
+
+  {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => {
+    const page = i + 1;
+    const isCurrent = page === currentPage;
+    return (
+      <a
+        href={isCurrent ? undefined : `/search?${baseQuery}${connector}page=${page}`}
+        aria-current={isCurrent ? "page" : undefined}
+        class={`rounded px-3 py-1.5 text-sm ${
+          isCurrent
+            ? "bg-blue-600 text-white"
+            : "border border-gray-300 text-gray-700 hover:bg-gray-100"
+        }`}
+      >
+        {page}
+      </a>
+    );
+  })}
+
+  {currentPage < totalPages && (
+    <a
+      href={`/search?${baseQuery}${connector}page=${currentPage + 1}`}
+      class="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Next →
+    </a>
+  )}
+</nav>
