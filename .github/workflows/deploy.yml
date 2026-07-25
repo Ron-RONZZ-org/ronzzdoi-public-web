@@ -16,8 +16,7 @@ jobs:
           script: |
             set -e
             sudo -u ronzz git -C /opt/ronzzdoi-public-web pull origin main
-            sudo -u ronzz HOME=/opt/ronzzdoi-public-web npm ci --prefix /opt/ronzzdoi-public-web
-            sudo -u ronzz HOME=/opt/ronzzdoi-public-web npm run build --prefix /opt/ronzzdoi-public-web
+            sudo -u ronzz HOME=/opt/ronzzdoi-public-web sh -c 'cd /opt/ronzzdoi-public-web && npm ci && npm run build'
             sudo systemctl restart ronzzdoi-web
             sleep 2
             sudo systemctl status ronzzdoi-web --no-pager | head -5
