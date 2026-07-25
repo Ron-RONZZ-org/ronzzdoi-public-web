@@ -15,10 +15,9 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -e
-            cd /opt/ronzzdoi-public-web
-            git pull origin main
-            npm ci
-            npm run build
+            sudo -u ronzz git -C /opt/ronzzdoi-public-web pull origin main
+            sudo -u ronzz HOME=/opt/ronzzdoi-public-web npm ci --prefix /opt/ronzzdoi-public-web
+            sudo -u ronzz HOME=/opt/ronzzdoi-public-web npm run build --prefix /opt/ronzzdoi-public-web
             sudo systemctl restart ronzzdoi-web
             sleep 2
             sudo systemctl status ronzzdoi-web --no-pager | head -5
