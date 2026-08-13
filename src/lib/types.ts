@@ -8,6 +8,20 @@ export interface PublicDOIResponse {
   metadata: Record<string, unknown>;
   created_at: string;
   snippet: string | null;
+  /** Set on search results that matched snippet content (unified search). */
+  content_kind?: string | null;
+}
+
+export interface PublicSnippetResponse {
+  doi: string;
+  title: string;
+  content_kind: "text" | "code" | "math";
+  content: string;
+  language: string;
+  source_doi: string | null;
+  page_start: string;
+  page_end: string;
+  created_at: string;
 }
 
 export interface PublicSearchResponse {

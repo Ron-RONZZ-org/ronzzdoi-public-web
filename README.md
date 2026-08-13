@@ -10,6 +10,12 @@ Built with [Astro](https://astro.build) + [Svelte 5](https://svelte.dev) + [Tail
 - **Browse** — browse all DOI records with filtering by type
 - **Resolve** — redirect to target URLs via `doi.ronzz.org/<id>`
 - **Cite** — formatted citations (APA, Vancouver, JSON)
+- **Snippet embeds** — server-rendered embed fragments at
+  `doi.ronzz.org/embed/10.ronzz/<suffix>`: text quotations, shiki-highlighted
+  code, and KaTeX math. Embeddable via `<iframe>` on any ronzz site
+  (`X-Frame-Options` is lifted for `/embed/`, CSP `frame-ancestors *`,
+  `Cross-Origin-Resource-Policy: cross-origin`). Edits propagate to embeds
+  within ~5 min (`Cache-Control: max-age=60, s-maxage=300`).
 - **Rate-limited** — public API calls are throttled via slowapi
 - **No auth** — read-only public interface; authentication is handled by the backend
 
@@ -96,5 +102,6 @@ ronzzdoi).
 ## Testing
 
 ```bash
-npm run test    # vitest
+npx vitest run     # unit tests (api, snippetEmbed)
+CHROME_PATH=<chromium> node tests/e2e_smoke.mjs   # browser smoke (servers must be running)
 ```

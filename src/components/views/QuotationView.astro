@@ -1,0 +1,57 @@
+---
+import type { PublicSnippetResponse } from "../../lib/types";
+import {
+  renderSnippetContent,
+  snippetAttribution,
+  embedIframeTag,
+  escapeHtml,
+} from "../../lib/snippetEmbed";
+import EmbedCode from "../EmbedCode.svelte";
+
+export interface Props {
+  snippet: PublicSnippetResponse;
+}
+
+const { snippet } = Astro.props;
+const contentHtml = await renderSnippetContent(snippet);
+const attribution = snippetAttribution(snippet);
+const iframeTag = embedIframeTag({ doi: snippet.doi, title: snippet.title || undefined });
+const doiSuffix = snippet.doi.replace(/^10\.ronzz\//, "");
+const kindLabel = snippet.content_kind === "code"
+  ? (snippet.language ? `Code · ${escapeHtml(snippet.language)}` : "Code")
+  : snippet.content_kind === "math" ? "KaTeX Math" : "Quotation";
+---
+
+<div class="space-y-6">
+  <div class="flex items-center gap-3">
+    <h1 class="text-2xl font-bold text-gray-900">
+      {snippet.title || snippet.doi}
+    </h1>
+    <span class="rounded-full border border-gray-300 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+      {kindLabel}
+    </span>
+  </div>
+
+  <!-- Rendered content: escaped text / shiki-highlighted code / KaTeX math -->
+  <div class="rounded-xl border border-gray-200 bg-gray-50 p-5" data-kind={snippet.content_kind} set:html={contentHtml} />
+
+  {attribution.text && (
+    <p class="text-sm text-gray-500">
+      {attribution.href
+        ? (
+          <a href={attribution.href} class="text-blue-600 hover:underline">← {attribution.text}</a>
+        )
+        : attribution.text}
+    </p>
+  )}
+
+  <section>
+    <h2 class="mb-3 text-lg font-semibold text-gray-800">Embed this snippet</h2>
+    <EmbedCode client:load tag={iframeTag} />
+    <p class="mt-2 text-sm text-gray-500">
+      Paste this on any ronzz site. Edits to the snippet update every embed.
+      <a href={`/embed/${encodeURIComponent(snippet.doi)}`} class="text-blue-600 hover:underline">Open embed page</a>
+      · <a href={`/doi/${doiSuffix}`} class="text-blue-600 hover:underline">Permalink</a>
+    </p>
+  </section>
+</div>

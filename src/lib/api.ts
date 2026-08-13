@@ -2,6 +2,7 @@ import type {
   PublicDOIResponse,
   PublicSearchResponse,
   PublicCitationResponse,
+  PublicSnippetResponse,
   PublicHealthResponse,
   SearchMode,
   CitationStyle,
@@ -96,6 +97,13 @@ export function fetchCitation(
 ): Promise<PublicCitationResponse> {
   const params = new URLSearchParams({ doi, style });
   return apiFetch<PublicCitationResponse>(`/public/v1/citation?${params.toString()}`);
+}
+
+/**
+ * Fetch snippet content for embedding.
+ */
+export function fetchSnippet(doi: string): Promise<PublicSnippetResponse> {
+  return apiFetch<PublicSnippetResponse>(`/public/v1/snippet/${encodeURIComponent(doi)}`);
 }
 
 /**

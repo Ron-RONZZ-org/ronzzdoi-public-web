@@ -5,13 +5,14 @@ import CitationView from "../../components/views/CitationView.astro";
 import PersonView from "../../components/views/PersonView.astro";
 import CountryView from "../../components/views/CountryView.astro";
 import EntityView from "../../components/views/EntityView.astro";
+import QuotationView from "../../components/views/QuotationView.astro";
 import TombstoneBanner from "../../components/views/TombstoneBanner.astro";
 import ExternalRedirectView from "../../components/views/ExternalRedirectView.astro";
 import UnresolvedView from "../../components/views/UnresolvedView.astro";
 import ErrorState from "../../components/ErrorState.astro";
-import { fetchDOI, fetchCitation } from "../../lib/api";
+import { fetchDOI, fetchCitation, fetchSnippet } from "../../lib/api";
 import { ApiError, GoneError, NotFoundError } from "../../lib/errors";
-import type { PublicDOIResponse } from "../../lib/types";
+import type { PublicDOIResponse, PublicSnippetResponse } from "../../lib/types";
 
 const suffix = Astro.params.suffix;
 if (!suffix) {
@@ -21,6 +22,7 @@ if (!suffix) {
 const doi = `10.ronzz/${suffix}`;
 
 let record: PublicDOIResponse | null = null;
+let snippet: PublicSnippetResponse | null = null;
 let citations: Array<{ style: string; citation: string }> = [];
 let error: { status: number; title: string; message: string } | null = null;
 let isTombstone = false;
@@ -28,8 +30,11 @@ let isTombstone = false;
 try {
   record = await fetchDOI(doi);
 
-  // Fetch citations for citation-type records
-  if (record.target_url || !["person", "country", "abstract_entity"].includes(record.doi_type)) {
+  // Snippets (embeddable content) are rendered by QuotationView — they are
+  // not citable, so skip the citation fetch entirely.
+  if (record.doi_type === "snippet") {
+    snippet = await fetchSnippet(doi);
+  } else if (record.target_url || !["person", "country", "abstract_entity"].includes(record.doi_type)) {
     const styles = ["apa", "vancouver", "mla", "chicago"] as const;
     const results = await Promise.allSettled(
       styles.map((style) => fetchCitation(doi, style)),
@@ -72,6 +77,8 @@ try {
       <CountryView record={record} />
     ) : record.doi_type === "abstract_entity" ? (
       <EntityView record={record} />
+    ) : record.doi_type === "snippet" && snippet ? (
+      <QuotationView snippet={snippet} />
     ) : record.doi_type === "external" && record.target_url ? (
       <ExternalRedirectView record={record} />
     ) : record.target_url ? (

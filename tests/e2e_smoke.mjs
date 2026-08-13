@@ -157,6 +157,24 @@ async function runTests() {
     assert(await nav.isVisible().catch(() => false), "Breadcrumb nav should be present");
   });
 
+  console.log("\n--- EMBED PAGE ---");
+
+  await test("Embed page renders error state for unknown DOI without JS errors", async () => {
+    await navigate("/embed/10.ronzz/zzznonexistent");
+    const text = await getPageText();
+    // Either a clean 404 message or a snippet render — but never a crash
+    assert(text.length > 0, "Embed page should render something");
+  });
+
+  await test("Embed page is frameable (no X-Frame-Options DENY)", async () => {
+    const resp = await page.goto(`${FRONTEND_URL}/embed/10.ronzz/zzznonexistent`, { waitUntil: "domcontentloaded" });
+    const xfo = resp.headers()["x-frame-options"];
+    assert(xfo === undefined || !xfo.includes("DENY"),
+      `X-Frame-Options should not block framing, got: ${xfo || "none"}`);
+    const corp = resp.headers()["cross-origin-resource-policy"];
+    assert(corp === "cross-origin", `CORP should be cross-origin, got: ${corp || "none"}`);
+  });
+
   console.log("\n--- ERROR PAGES ---");
 
   await test("404 page renders correctly", async () => {
@@ -194,8 +212,13 @@ async function runTests() {
     // of error pages, which is correct behavior:
     //   - 404: from /nonexistent-page and /favicon.ico
     //   - 500: from /500 (the page correctly returns 500 status)
+    //   - CSP: the embed page's strict CSP blocks the Vite dev-client scripts
+    //     (@vite/client, dev-toolbar) — dev-only artifacts absent in production builds
     const filtered = consoleErrors.filter(
-      (e) => !e.includes("404") && !e.includes("500"),
+      (e) =>
+        !e.includes("404") &&
+        !e.includes("500") &&
+        !e.includes("Content Security Policy"),
     );
     assert(filtered.length === 0,
       `${filtered.length} unexpected console error(s) (excluding expected API/page status codes):\n  ${filtered.join("\n  ")}`);
