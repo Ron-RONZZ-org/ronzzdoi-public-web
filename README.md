@@ -40,6 +40,14 @@ The Astro server runs in **SSR mode** (`@astrojs/node`, standalone). The public 
 frontend and the ronzzdoi API run on the same machine; the web server proxies API
 calls internally.
 
+## Related endpoints
+
+| Endpoint | Role |
+|----------|------|
+| `https://doi.ronzz.org` | this web app (public browse / search / cite / embeds) |
+| `https://doi-api.ronzz.org` | ronzzdoi **read** API (consumed by this app via `API_BASE_URL`) |
+| `https://doi-admin.ronzz.org` | ronzzdoi **write** API (key-protected — creating DOIs/snippets happens here, via the ronzzdoi CLI/GUI) |
+
 ## Quick Start
 
 ### Prerequisites
