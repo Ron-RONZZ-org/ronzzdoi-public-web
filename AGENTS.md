@@ -14,10 +14,15 @@ ronzzdoi CLI/GUI.
 
 ## Purpose and Expected Behavior
 
-- `src/pages/doi/[suffix].astro` — DOI detail page; dispatches by `doi_type`
-  to PersonView / CountryView / EntityView / QuotationView (snippets) /
-  ExternalRedirectView / CitationView / UnresolvedView. Snippet DOIs are NOT
-  citable — skip the citation fetch for them.
+- `src/pages/doi/[...suffix].astro` — DOI detail page (catch-all suffix so
+  multi-segment DOIs like `10.ronzz/country/FR` render); dispatches by
+  `doi_type` to PersonView / CountryView / EntityView / QuotationView
+  (snippets) / ExternalRedirectView / CitationView / UnresolvedView.
+  Snippet DOIs are NOT citable — skip the citation fetch for them.
+- `src/pages/10.ronzz/[...suffix].astro` — DOI **resolution** route
+  (canonical URL `doi.ronzz.org/10.ronzz/<suffix>`): external DOIs with a
+  `target_url` get an HTTP 302 to the target; every other DOI redirects to
+  its detail page at `/doi/<suffix>`; tombstoned → 410 page; missing → 404.
 - `src/pages/embed/[...doi].astro` — self-contained iframe fragment for
   snippets. No site chrome, **no scripts** (`CSP: default-src 'none'`).
   Query options: `?theme=dark`, `?cite=0`, `?title=`.
