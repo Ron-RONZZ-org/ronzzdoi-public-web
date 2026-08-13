@@ -1,0 +1,50 @@
+---
+import { fetchDOI } from "../../lib/api";
+import { ApiError, GoneError, NotFoundError, RateLimitedError } from "../../lib/errors";
+
+// DOI resolution route — `doi.ronzz.org/10.ronzz/<suffix>` (issue #40).
+//
+// Resolution semantics (mirroring the backend redirect handler):
+//   - External DOI with a target_url  → HTTP 302 to the target URL.
+//   - Any other DOI (book, article, person, snippet, …) → redirect to
+//     its human-readable detail page at `/doi/<suffix>`.
+//   - Tombstoned DOI → 410 page.
+//   - Non-existent DOI → 404 page.
+//
+// The catch-all suffix means multi-segment DOIs like
+// `10.ronzz/country/FR` resolve too.
+
+const suffix = Astro.params.suffix;
+if (!suffix) {
+  return Astro.redirect("/404");
+}
+
+const doi = `10.ronzz/${suffix}`;
+
+let record;
+try {
+  record = await fetchDOI(doi);
+} catch (e) {
+  if (e instanceof GoneError) {
+    return Astro.redirect("/410");
+  }
+  if (e instanceof NotFoundError) {
+    return Astro.redirect("/404");
+  }
+  if (e instanceof RateLimitedError) {
+    return Astro.redirect("/429");
+  }
+  if (e instanceof ApiError) {
+    return Astro.redirect("/500");
+  }
+  return Astro.redirect("/500");
+}
+
+// True resolution: point the browser at the target resource.
+if (record.target_url) {
+  return Astro.redirect(record.target_url, 302);
+}
+
+// Everything else renders the record page (citations, metadata, embeds).
+return Astro.redirect(`/doi/${suffix}`, 302);
+---

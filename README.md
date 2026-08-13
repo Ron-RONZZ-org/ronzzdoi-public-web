@@ -8,7 +8,9 @@ Built with [Astro](https://astro.build) + [Svelte 5](https://svelte.dev) + [Tail
 
 - **Search** — FTS5 full-text search across DOI metadata
 - **Browse** — browse all DOI records with filtering by type
-- **Resolve** — redirect to target URLs via `doi.ronzz.org/<id>`
+- **Resolve** — `doi.ronzz.org/10.ronzz/<suffix>` resolves: external DOIs
+  get an HTTP 302 to their target URL, everything else shows its record
+  page (missing → 404, tombstoned → 410)
 - **Cite** — formatted citations (APA, Vancouver, JSON)
 - **Snippet embeds** — server-rendered embed fragments at
   `doi.ronzz.org/embed/10.ronzz/<suffix>`: text quotations, shiki-highlighted

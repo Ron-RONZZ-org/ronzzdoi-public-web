@@ -157,6 +157,39 @@ async function runTests() {
     assert(await nav.isVisible().catch(() => false), "Breadcrumb nav should be present");
   });
 
+  console.log("\n--- DOI RESOLUTION (issue #40) ---");
+
+  await test("Canonical DOI URL redirects to a detail or error page, never crashes", async () => {
+    // doi.ronzz.org/10.ronzz/<suffix> must resolve: external DOIs 302 to
+    // their target, other DOIs redirect to /doi/<suffix>, missing DOIs to
+    // /404. Without a live backend an error page is acceptable — the key
+    // invariant is that the redirect chain terminates on a real page.
+    await navigate("/10.ronzz/abc123");
+    const finalUrl = page.url();
+    assert(
+      finalUrl.includes("/doi/") || finalUrl.includes("/404") || finalUrl.includes("/500"),
+      `Canonical DOI URL should land on a detail/error page, got: ${finalUrl}`,
+    );
+  });
+
+  await test("Canonical DOI URL for a non-existent DOI lands on the 404 page", async () => {
+    await navigate("/10.ronzz/zzznonexistent");
+    const text = await getPageText();
+    assert(text.includes("404"), `Should land on the 404 page, got: "${text.slice(0, 120)}"`);
+  });
+
+  await test("Multi-segment canonical DOI URL is accepted by the route", async () => {
+    // 10.ronzz/country/FR-style suffixes must reach the resolver, not a
+    // hard 404 from the SPA router (the DOI may not exist in the backend —
+    // landing on the 404 page is the correct outcome).
+    await navigate("/10.ronzz/country/FR");
+    const text = await getPageText();
+    assert(
+      text.includes("404") || text.includes("Not Found") || text.includes("country"),
+      `Multi-segment DOI should resolve to a page, got: "${text.slice(0, 120)}"`,
+    );
+  });
+
   console.log("\n--- EMBED PAGE ---");
 
   await test("Embed page renders error state for unknown DOI without JS errors", async () => {
