@@ -3,6 +3,7 @@ import {
   escapeHtml,
   renderMath,
   highlightCode,
+  renderMarkdownText,
   renderSnippetContent,
   snippetAttribution,
   embedIframeTag,
@@ -89,14 +90,61 @@ describe("highlightCode", () => {
   });
 });
 
+// ─── renderMarkdownText ───────────────────────────────────────────────────
+
+describe("renderMarkdownText", () => {
+  it("renders markdown emphasis, links and code spans", () => {
+    const html = renderMarkdownText("**bold** and `code` — see [the book](https://x)");
+    expect(html).toContain("<strong>bold</strong>");
+    expect(html).toContain("<code>code</code>");
+    expect(html).toContain('<a href="https://x">the book</a>');
+  });
+
+  it("renders headings and lists", () => {
+    const html = renderMarkdownText("# Act III\n\n- a\n- b");
+    expect(html).toContain("<h1>Act III</h1>");
+    expect(html).toContain("<li>a</li>");
+  });
+
+  it("never lets a script payload survive", () => {
+    const html = renderMarkdownText('a<script>alert(1)</script>b');
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain("alert(1)");
+  });
+
+  it("strips event handlers, javascript: URLs and images", () => {
+    const html = renderMarkdownText(
+      '<img src="x" onerror="alert(1)"> <a href="javascript:alert(1)">click</a>',
+    );
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("onerror");
+    expect(html).not.toContain("javascript:");
+  });
+
+  it("keeps sanitized pasted HTML markup", () => {
+    const html = renderMarkdownText("<p>A <b>wise</b> quote</p>");
+    expect(html).toContain("<p>A <b>wise</b> quote</p>");
+  });
+
+  it("keeps text inside disallowed formatting tags", () => {
+    const html = renderMarkdownText("<center>keep me</center>");
+    expect(html).toContain("keep me");
+  });
+});
+
 // ─── renderSnippetContent ────────────────────────────────────────────────
 
 describe("renderSnippetContent", () => {
-  it("wraps text in a blockquote with escaped content", async () => {
+  it("wraps text in a blockquote with rendered, sanitized markdown", async () => {
     const html = await renderSnippetContent(snippet({ content: `"quote" <b>bold</b>` }));
     expect(html).toContain('<blockquote class="snip-quote">');
-    expect(html).toContain("&lt;b&gt;");
-    expect(html).not.toContain("<b>bold</b>");
+    expect(html).toContain("<b>bold</b>");
+  });
+
+  it("escapes plain text inside the blockquote", async () => {
+    const html = await renderSnippetContent(snippet({ content: "<script>alert(1)</script>" }));
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain("alert(1)");
   });
 
   it("renders code via shiki", async () => {

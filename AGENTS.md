@@ -27,15 +27,19 @@ ronzzdoi CLI/GUI.
   snippets. No site chrome, **no scripts** (`CSP: default-src 'none'`).
   Query options: `?theme=dark`, `?cite=0`, `?title=`.
 - `src/lib/snippetEmbed.ts` — shared server-side rendering (used by both the
-  detail page and the embed page): text → escaped `blockquote`, code → shiki,
-  math → KaTeX `renderToString` with escaped fallback.
+  detail page and the embed page): text → markdown rendered then sanitized
+  (`renderMarkdownText`), code → shiki, math → KaTeX `renderToString` with
+  escaped fallback.
 
 ## Constraints and Invariants
 
 - **XSS safety is non-negotiable.** Snippet content is user-authored and gets
-  injected into third-party pages. Every content path must escape:
-  `escapeHtml` for text, shiki/katex for code/math (they escape by
-  construction). Never interpolate raw metadata into HTML.
+  injected into third-party pages. Every content path must either **sanitize**
+  (`renderMarkdownText` for text — markdown rendered then run through
+  `sanitize-html` with the snippet allowlist, no scripts/images/event
+  handlers/javascript: URLs) or **escape** (`escapeHtml` for math fallback and
+  metadata; shiki/katex escape by construction). Never interpolate raw
+  metadata into HTML.
 - **`{#if}` / `{#each}` do not exist in Astro** — that is Svelte syntax. Use
   `{cond ? <A/> : <B/>}` / `{cond && <A/>}` and `.map()`. See `[suffix].astro`
   and `CitationView.astro` for the established pattern.

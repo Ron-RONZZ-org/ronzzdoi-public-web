@@ -1,15 +1,18 @@
 // ─── Snippet embed rendering ──────────────────────────────────────────────
 //
 // Server-side rendering for embeddable snippets:
-//   - text  → HTML-escaped quotation (blockquote)
+//   - text  → markdown rendered to HTML, then sanitized (blockquote)
 //   - code  → shiki syntax highlighting (escaped by construction)
 //   - math  → KaTeX server-side renderToString
 //
-// All output is safe to inject via `set:html` — every path either escapes
-// user input (escapeHtml) or produces escaped markup (katex/shiki escape
-// their input).  The escaping tests in snippetEmbed.test.ts guard this.
+// All output is safe to inject via `set:html` — every path either
+// sanitizes user input (renderMarkdownText for text) or produces escaped
+// markup (katex/shiki escape their input).  The escaping tests in
+// snippetEmbed.test.ts guard this.
 
 import katex from "katex";
+import { marked } from "marked";
+import sanitizeHtml from "sanitize-html";
 import type { Highlighter } from "shiki";
 import type { PublicSnippetResponse } from "./types";
 
@@ -23,6 +26,34 @@ export function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+// Allowlist shared with the admin GUI renderer (web/src/lib/snippetRender.js):
+// text-formatting quotation markup only — no script, iframe, object, img,
+// or event-handler attributes.
+const SNIPPET_ALLOWED_TAGS = [
+  "p", "br", "strong", "em", "b", "i", "u", "s", "strike", "del", "ins",
+  "a", "ul", "ol", "li", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6",
+  "code", "pre", "span", "hr", "sub", "sup", "q", "mark", "small",
+];
+
+const SNIPPET_ALLOWED_ATTR: Record<string, string[]> = {
+  a: ["href", "title", "rel", "target"],
+};
+
+/**
+ * Render text-snippet markdown to sanitized HTML.
+ *
+ * Text snippets store raw markdown/HTML; render it server-side and
+ * sanitize so nothing dangerous survives (scripts, event handlers,
+ * javascript: URLs, images).
+ */
+export function renderMarkdownText(content: string): string {
+  return sanitizeHtml(marked.parse(content), {
+    allowedTags: SNIPPET_ALLOWED_TAGS,
+    allowedAttributes: SNIPPET_ALLOWED_ATTR,
+    allowedSchemes: ["http", "https", "mailto"],
+  });
 }
 
 /**
@@ -100,7 +131,8 @@ export async function highlightCode(
 /**
  * Render a snippet's content to safe HTML, wrapped per content kind.
  *
- * text → `<blockquote class="snip-quote">…</blockquote>`
+ * text → `<blockquote class="snip-quote">…</blockquote>` (markdown
+ * rendered then sanitized via `renderMarkdownText`)
  * code → shiki `<pre class="shiki">…</pre>` (or escaped fallback)
  * math → `<div class="snip-math">…</div>` (KaTeX)
  */
@@ -119,7 +151,7 @@ export async function renderSnippetContent(
       }
     }
     default:
-      return `<blockquote class="snip-quote">${escapeHtml(snippet.content)}</blockquote>`;
+      return `<blockquote class="snip-quote">${renderMarkdownText(snippet.content)}</blockquote>`;
   }
 }
 
